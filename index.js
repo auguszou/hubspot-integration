@@ -23,7 +23,7 @@ if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET) {
 //  installing. If they don't match your app's configuration, users will
 //  see an error page.
 
-// Replace the following with the values from your app auth config, 
+// Replace the following with the values from your app auth config,
 // or set them as environment variables before running.
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -46,7 +46,7 @@ app.use(session({
   resave: false,
   saveUninitialized: true
 }));
- 
+
 //================================//
 //   Running the OAuth 2.0 Flow   //
 //================================//
@@ -170,12 +170,12 @@ const getContact = async (accessToken) => {
       'Content-Type': 'application/json'
     };
     console.log('===> Replace the following request.get() to test other API calls');
-    console.log('===> request.get(\'https://api.hubapi.com/contacts/v1/lists/all/contacts/all?count=1\')');
-    const result = await request.get('https://api.hubapi.com/contacts/v1/lists/all/contacts/all?count=1', {
+    console.log('===> request.get(\'https://api.hubapi.com/contacts/v1/lists/all/contacts/all?count=10\')');
+    const result = await request.get('https://api.hubapi.com/contacts/v1/lists/all/contacts/all?count=10', {
       headers: headers
     });
 
-    return JSON.parse(result).contacts[0];
+    return JSON.parse(result).contacts;
   } catch (e) {
     console.error('  > Unable to retrieve contact');
     return JSON.parse(e.response.body);
@@ -192,7 +192,7 @@ const displayContactName = (res, contact) => {
     return;
   }
   const { firstname, lastname } = contact.properties;
-  res.write(`<p>Contact name: ${firstname.value} ${lastname.value}</p>`);
+  res.write(`<p>Contact name: ${firstname.value} ${lastname.value}, ${JSON.stringify(contact.properties)}</p>`);
 };
 
 app.get('/', async (req, res) => {
@@ -200,9 +200,12 @@ app.get('/', async (req, res) => {
   res.write(`<h2>HubSpot OAuth 2.0 Quickstart App</h2>`);
   if (isAuthorized(req.sessionID)) {
     const accessToken = await getAccessToken(req.sessionID);
-    const contact = await getContact(accessToken);
+    const contacts = await getContact(accessToken);
     res.write(`<h4>Access token: ${accessToken}</h4>`);
-    displayContactName(res, contact);
+
+    contacts.map((contact)=> {
+      displayContactName(res, contact);
+    })
   } else {
     res.write(`<a href="/install"><h3>Install the app</h3></a>`);
   }
